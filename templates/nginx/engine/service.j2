@@ -1,0 +1,9 @@
+location / {
+  # p_nginx_custom_root_location
+  {{ p_nginx_custom_root_location | default('') | indent(2) }}
+
+  try_files $uri @rewrite;
+}
+
+# p_nginx_location_rewrite
+{{ p_nginx_location_rewrite }}

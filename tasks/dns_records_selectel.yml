@@ -1,0 +1,21 @@
+---
+- name: "{{ domain.domain }} : Ensure domain exists (Selectel)"
+  selectel_dns:
+    domain: "{{ domain.domain }}"
+    state: present
+    api_token: "{{ p_dns_selectel_token }}"
+  delegate_to: localhost
+
+- name: "{{ domain.domain }} : Ensure records exists in domain (Selectel)"
+  selectel_dns:
+    domain: "{{ domain.domain }}"
+    record: "{{ item.record }}"
+    type: "{{ item.type }}"
+    value: "{{ item.value }}"
+    ttl: "{{ item.ttl | default(p_dns_ttl) }}"
+    priority: "{{ item.priority | default(omit) }}"
+    solo: "{{ item.solo | default(true) }}"
+    state: "{{ item.state | default('present') }}"
+    api_token: "{{ p_dns_selectel_token }}"
+  delegate_to: localhost
+  with_items: "{{ domain.records }}"

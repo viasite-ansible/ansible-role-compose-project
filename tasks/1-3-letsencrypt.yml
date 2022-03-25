@@ -1,0 +1,12 @@
+---
+- name: "{{ domain.domain }} Define letsencrypt_acmesh_certs"
+  set_fact:
+    letsencrypt_acmesh_env: "{{ p_letsencrypt_acmesh_env }}"
+    letsencrypt_acmesh_certs:
+      - domains: "{{ domain.acmesh_domains }}"
+        deploy_path: "{{ p_letsencrypt_acmesh_deploy_path }}"
+        args: "{% if domain.provider == 'selectel' %}--dns dns_selectel{% endif %}{% if domain.provider == 'cloudflare' %}--dns dns_cf{% endif %}{% if not domain.provider %}{{ p_letsencrypt_acmesh_args }}{% endif %}"
+
+- name: "Setup letsencrypt certificates"
+  include_role:
+    name: letsencrypt-acmesh

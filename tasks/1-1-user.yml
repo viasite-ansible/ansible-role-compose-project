@@ -1,0 +1,58 @@
+---
+- name: "Project: User add"
+  user:
+    name: "{{ p_user }}"
+    groups: ["docker"]
+    home: "{{ p_homedir }}"
+    shell: /bin/zsh
+  become: yes
+  tags: user_create
+
+- name: "Project: User directory access"
+  file:
+    path: "{{ p_homedir }}"
+    state: directory
+    mode: 0700
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  tags: [ user_create, permissions ]
+
+- name: "Project: check ~/.zshrc exists"
+  stat:
+    path: "{{ p_homedir }}/.zshrc"
+  changed_when: False
+  register: p_register_zshrc
+  tags: [ user_create, zsh ]
+
+- name: "Project: setup simple ~/.zshrc if empty"
+  template:
+    src: "{{ p_user_zsh_template }}"
+    dest: "{{ p_homedir }}/.zshrc"
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  when: not p_setup_zsh and (not p_register_zshrc.stat.exists or p_force_zshrc)
+  tags: [ user_create, zsh ]
+
+- name: "Project: setup git"
+  include_role:
+    name: git
+  vars:
+    git_user: "{{ p_user }}"
+  tags: git
+  when: p_setup_git
+
+- name: "Project: setup ssh-keys"
+  include_role:
+    name: ssh-keys
+  vars:
+    ssh_keys_user: "{{ p_user }}"
+  tags: ssh-keys
+  when: p_setup_ssh_keys
+
+- name: "Project: setup zsh"
+  include_role:
+    name: zsh
+  vars:
+    zsh_user: "{{ p_user }}"
+  tags: zsh
+  when: p_setup_zsh

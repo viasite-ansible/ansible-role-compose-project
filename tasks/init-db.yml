@@ -1,0 +1,6 @@
+---
+
+- name: "Как инициализировать проект (чтобы увидеть, запустите с --tags init-db)"
+  debug:
+    msg: "{{ p_init_readme }}"
+  tags: [init-db]

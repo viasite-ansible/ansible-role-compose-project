@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+trap 'cat "{{ p_log_update }}.last"' EXIT
+
+cd "{{ p_root }}"
+> "{{ p_log_update }}.last"
+echo "Commencing docker-compose update `date`" >> "{{ p_log_update }}.last"
+# Do a pull then an update
+/usr/local/bin/docker-compose --no-ansi pull {{ p_compose_pull }} 2>&1 >> "{{ p_log_update }}.last"
+/usr/local/bin/docker-compose --no-ansi up -d 2>&1 >> "{{ p_log_update }}.last"
+{% if p_nginx_docker %}/usr/local/bin/docker-compose exec nginx nginx -s reload 2>&1 >> "{{ p_log_update }}.last"{% endif %}
+{% if not p_nginx_docker %}service nginx reload{% endif %}
+
+#echo "Sleeping 10 seconds." 2>&1 | >> "{{ p_log_update }}.last"
+#sleep 10
+#/usr/local/bin/docker-compose restart 2>&1 | >> "{{ p_log_update }}.last"
+docker volume prune -f
+echo "Finishing docker-compose update `date`" 2>&1 | >> "{{ p_log_update }}.last"
+cat "{{ p_log_update }}.last" >> "{{ p_log_update }}"

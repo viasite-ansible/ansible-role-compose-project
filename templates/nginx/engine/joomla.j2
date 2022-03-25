@@ -1,0 +1,34 @@
+location / {
+  # p_nginx_location_static_files
+  {{ p_nginx_location_static_files | indent(2) }}
+
+  # p_nginx_location_default
+  {{ p_nginx_location_default | indent(2) }}
+
+  # p_nginx_location_php
+  {{ p_nginx_location_php | indent(2) }}
+
+  # p_nginx_custom_root_location
+  {{ p_nginx_custom_root_location | default('') | indent(2) }}
+
+  try_files $uri @rewrite;
+}
+
+# p_nginx_location_rewrite
+{{ p_nginx_location_rewrite }}
+
+#location ~* /administrator/.*?\.php {
+#  limit_req zone=oneminute burst=5;
+#  { p_nginx_proxy_to_backend | indent(2) }
+#}
+
+location ~ /images/(.+)\.php$ {
+  deny all;
+}
+
+location ~* /getimg/ {
+  access_log off;
+  expires 365d;
+  try_files $uri @rewrite;
+}
+

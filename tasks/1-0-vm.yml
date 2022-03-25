@@ -1,0 +1,14 @@
+---
+- set_fact:
+    p_vm_file: "/home/popstas/projects/1mi/ansible-server/vars/vms/hosts/{{ p_vm }}.yml"
+  tags: [ vm ]
+
+- name: Load vm variables
+  include_vars: "{{ p_vm_file }}"
+  tags: [ vm ]
+
+- name: "apply libvirt_vms"
+  include_role:
+    name: libvirt-vm
+  tags: [ vm ]
+  when: libvirt_vms is defined

@@ -1,0 +1,33 @@
+# Colors
+autoload -U colors
+colors
+setopt prompt_subst
+
+unset MC_SKIN # for prevent error when su to user from root
+
+HISTSIZE=1000
+SAVEHIST=100000
+
+# history from oh-my-zsh
+HISTFILE=~/.zsh_history
+setopt append_history
+setopt extended_history
+setopt hist_expire_dups_first
+setopt hist_ignore_dups # ignore duplication command history list
+setopt hist_ignore_space
+setopt hist_verify
+setopt inc_append_history
+alias history='fc -il 1' # yyyy-mm-dd
+
+PROMPT='%F{green}%n%f@%F{cyan}%m%f %F{yellow}%3~%f$ '
+RPROMPT=''
+
+bindkey '\e[1~' beginning-of-line # home
+bindkey '\e[4~' end-of-line # end
+
+autoload compinit
+compinit
+
+cd "$HOME/www"
+sites="$(find ~/www -mindepth 1 -maxdepth 1 -type d)"
+if [ "$(echo "$sites" | wc -l)" = 1 ]; then cd "$sites"; fi

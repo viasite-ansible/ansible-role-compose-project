@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: Stanislav Popov
+  company: 1MI
+  description: Setup project with docker-compose
+  license: MIT
+  min_ansible_version: "2.0"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - xenial
+        - focal
+  galaxy_tags:
+    - web
+    - deployment
+    - docker
+    - docker-compose
+dependencies: []

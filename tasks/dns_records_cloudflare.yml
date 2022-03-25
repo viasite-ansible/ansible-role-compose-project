@@ -1,0 +1,23 @@
+---
+- name: "{{ domain.domain }} : Ensure records exists in domain (Cloudflare)"
+  cloudflare_dns:
+    domain: "{{ domain.domain }}"
+    record: "{{ record.record }}"
+    type: "{{ record.type }}"
+    value: "{{ record.value }}"
+    ttl: "{{ record.ttl | default(omit) }}"
+    priority: "{{ record.priority | default(omit) }}"
+    solo: "{{ record.solo | default(true) }}"
+    state: "{{ record.state | default('present') }}"
+    port: "{{ record.port | default(omit) }}"
+    proto: "{{ record.proto | default(omit) }}"
+    proxied: "{{ record.proxied | default(omit) }}"
+    service: "{{ record.service | default(omit) }}"
+    weight: "{{ record.weight | default(omit) }}"
+    account_email: "{{ p_dns_cloudflare_email | default(omit) }}"
+    api_token: "{{ p_dns_cloudflare_token }}"
+#  delegate_to: localhost
+  delegate_to: localhost
+  with_items: "{{ domain.records }}"
+  loop_control:
+    loop_var: record

@@ -1,0 +1,41 @@
+---
+- name: Write docker-compose.yml
+  template:
+    src: docker-compose.yml.j2
+    dest: "{{ p_root }}/docker-compose.yml"
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  become: yes
+  tags: [config, docker, config-docker-compose]
+
+- name: Write update.sh
+  template:
+    src: update.sh.j2
+    dest: "{{ p_root }}/update.sh"
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+    mode: "0755"
+  tags: [config, config-deploy]
+
+- name: Run update.sh
+  shell: "{{ p_root }}/update.sh" # | grep -vE '(up-to-date|Pulling)'
+#  changed_when: False # TODO:
+  register: p_update_sh
+  changed_when: "'Creating' in p_update_sh.stdout or 'Recreating' in p_update_sh.stdout or 'Starting' in p_update_sh.stdout"
+  failed_when: "'ERROR' in p_update_sh.stdout or 'Error' in p_update_sh.stdout"
+  tags: [docker, deploy, pull]
+
+- name: update.sh output
+  debug: msg="************************************\n{{ p_update_sh.stdout }}"
+  tags: [docker, deploy, pull, print_action]
+  when: p_update_sh is defined and 'stdout' in p_update_sh
+
+# - name: docker-compose up
+#   docker_compose:
+#     project_src: "{{ p_root }}"
+#     build: no
+#     debug: yes
+#     pull: no
+#     timeout: 10
+#   register: output
+#   tags: [docker, deploy, up]
