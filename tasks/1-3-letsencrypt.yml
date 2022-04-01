@@ -1,7 +1,8 @@
 ---
 - name: "{{ domain.domain }} Define letsencrypt_acmesh_certs"
   set_fact:
-    letsencrypt_acmesh_env: "{{ p_letsencrypt_acmesh_env }}"
+#    letsencrypt_acmesh_env: "{{ p_letsencrypt_acmesh_env }}"
+    letsencrypt_acmesh_env: "{% if domain.provider == 'selectel' %}SL_Key={{ p_dns_selectel_token }}{% endif %}{% if domain.provider == 'cloudflare' %}CF_Token={{ p_dns_cloudflare_token }}{% endif %}{% if not domain.provider %}{{ letsencrypt_acmesh_env }}{% endif %}"
     letsencrypt_acmesh_certs:
       - domains: "{{ domain.acmesh_domains }}"
         deploy_path: "{{ p_letsencrypt_acmesh_deploy_path }}"
