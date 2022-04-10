@@ -18,6 +18,7 @@ p_domains_redirected: []
 p_domains_remove: []
 
 p_domains: []
+p_dirs: []
 
 p_dns_provider: cloudflare # или selectel
 p_dns_selectel_token: # для dns и letsencrypt через dns

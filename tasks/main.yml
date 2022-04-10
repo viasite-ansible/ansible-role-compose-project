@@ -47,7 +47,8 @@
   become: true
   tags: [docker]
 
-- include: 2-4-compose-deploy.yml
+- include_tasks: 2-4-compose-deploy.yml
+  when: p_compose is defined
 
 - include: init-db.yml
   when: p_register_running_all is not defined
