@@ -14,7 +14,7 @@ p_compose_pull: # pull only these services
 p_domain: "{{ p_domains[0].domain }}"
 p_domains_secondary: []
 # www p_domain will be added automatically
-p_domains_redirected: []
+p_domains_redirected: "{% if 'redirected' in p_domains[0] %}{{ p_domains[0].redirected }}{% else %}[]{% endif %}"
 p_domains_remove: []
 
 p_domains: []
