@@ -1,7 +1,7 @@
 ---
 - name: Load project variables
   include_vars: "{{ project_vars_file }}"
-  tags: [ site, always ]
+  tags: [ always ]
 
 - name: Check that running all tasks
   command: /bin/true
@@ -11,7 +11,7 @@
 
 
 - import_tasks: 1-0-vm.yml
-  tags: [ site, vm ] # never тег не катит, т.к. ломает --list-tags
+  tags: [ vm ] # never тег не катит, т.к. ломает --list-tags
   when: p_vm is defined and p_register_running_all is not defined
 
 
@@ -19,7 +19,7 @@
 - include: 1-1-user.yml
 
 - import_tasks: 1-2-dns.yml
-  tags: [ site, dns ] # never тег не катит, т.к. ломает --list-tags
+  tags: [ dns ] # never тег не катит, т.к. ломает --list-tags
   when: p_domains is defined and p_register_running_all is not defined
 
 - include_tasks: 1-3-letsencrypt.yml
@@ -46,8 +46,20 @@
   when: p_ssl
   tags: [ config, nginx ]
 
+- debug: var=p_nginx_backend
+- import_tasks: 2-3-php.yml
+  when: p_nginx_backend == 'apache'
+  tags: [ php ]
+
+- include_tasks: 2-4-apache.yml
+  tags: [ apache, apache_vhosts ]
+  when: p_nginx_backend == 'apache' and domain_raw.acmesh_domains is defined or domain_raw.ssl is defined
+  with_items: "{{ p_domains }}"
+  loop_control:
+    loop_var: domain_raw
+
 # TODO: чем include отличается от import_tasks?
-- import_tasks: 2-3-cron.yml
+- import_tasks: 3-1-cron.yml
   tags: [ cron ]
 
 - name: Install docker packages (pip)
@@ -55,10 +67,10 @@
     name: docker
     state: present
   become: true
-  tags: [docker]
+  tags: [ docker ]
 
-- include_tasks: 2-4-compose-deploy.yml
-  when: p_compose is defined
+- include_tasks: 4-1-compose-deploy.yml
+  when: p_compose is defined and p_compose
 
 - include: init-db.yml
   when: p_register_running_all is not defined

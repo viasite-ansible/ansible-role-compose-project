@@ -1,0 +1,62 @@
+---
+
+- name: "{{ domain_raw.domain}} : Define domain secondary vars"
+  set_fact:
+    p_domain: "{{ domain_raw.domain }}"
+    p_domain_redirected: "{% if 'www.' in domain_raw.domain %}{{ domain_raw.domain | replace('www.', '') }}{% else %}www.{{ domain_raw.domain }}{% endif %}"
+    p_domain_main: "{{ domain_raw.domain | replace('www.', '') }}"
+    p_tmp_domain_remove: "{{ 'state' in domain_raw and domain_raw.state == 'absent' }}"
+
+- name: "{{ domain_raw.domain}} : Define domain var"
+  set_fact:
+    p_domains_remove: "{{ [p_domain_main] if p_tmp_domain_remove else [] }}"
+    domain:
+      domain: "{{ domain_raw.domain }}"
+      domains_secondary: "{{ domain_raw.domains_secondary | default(p_domains_secondary) }}"
+      domains_redirected: "{{ domains_redirected | default([]) + [ p_domain_redirected ] }}"
+      root_public: "{{ domain_raw.root_public | default(p_root_public) }}"
+
+- name: "{{ domain.domain}} : Generate apache variables"
+  set_fact:
+    apache_vhosts_sites_json: {}
+    apache_vhosts_sites_data:
+      servername: "{{ domain.domain }}"
+      serveralias: "{{ domain.domains_redirected | join(' ') }} {{ domain.domains_secondary | join(' ') }}"
+      documentroot: "{{ domain.root_public }}"
+      extra_parameters: |
+        # https://serverfault.com/a/672969/437918
+        # This is to forward all PHP to php-fpm.
+        <FilesMatch \.php$>
+          SetHandler "proxy:unix:{{ p_php_socket }}|fcgi://{{ p_domain_main }}/"
+        </FilesMatch>
+
+        # Set some proxy properties (the string "{{ p_domain_main }}" should match
+        # the one set in the FilesMatch directive.
+        <Proxy fcgi://{{ p_domain_main }}>
+          ProxySet connectiontimeout=5 timeout=240
+        </Proxy>
+
+        # If the php file doesn't exist, disable the proxy handler.
+        # This will allow .htaccess rewrite rules to work and
+        # the client will see the default 404 page of Apache
+        RewriteCond %{REQUEST_FILENAME} \.php$
+        RewriteCond %{DOCUMENT_ROOT}/%{REQUEST_URI} !-f
+        RewriteRule (.*) - [H=text/html]
+
+        # old way
+        # ProxyPassMatch "^/(.*\.php(/.*)?)$" "unix:{{ p_php_socket }}|fcgi://localhost:9000{{ p_root }}"
+
+        # for HTTP auth in bitrix
+        SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+        SetEnvIf X-Forwarded-Proto https HTTPS=on
+        SetEnvIf X-HTTPS 1 HTTPS=on
+
+- name: "{{ p_domain}} : Setup apache vhost"
+  include_role:
+    name: apache-vhosts
+  vars:
+    apache_vhosts_sites: "{{ apache_vhosts_sites_json | combine({
+        p_domain_main: apache_vhosts_sites_data
+      }) }}"
+    apache_vhosts_remove_sites: "{{ p_domains_remove }}"
+  tags: [apache]

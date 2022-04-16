@@ -27,29 +27,31 @@ p_dns_cloudflare_token: # для dns и letsencrypt через dns
 #p_dns_domains:
 p_dns_ttl: 3600
 
-p_letsencrypt_acmesh_deploy_path: "{{ p_data }}/certs"
+p_letsencrypt_acmesh_deploy_path: "{% if p_name %}{{ p_data }}/certs{% else %}{{ p_homedir }}/certs{% endif %}"
 p_letsencrypt_acmesh_args: "--dns dns_cf" # или "--dns dns_selectel"
 p_letsencrypt_acmesh_env: "{{ letsencrypt_acmesh_env | default('CF_Token=') }}"
 
 p_user: deployer
-p_homedir_group: www-data # for nginx access
+p_homedir_group: "{{ p_nginx_user }}" # for nginx access
 p_user_group: "{{ p_user }}"
 
 p_homedir: "/home/{{ p_user }}"
 p_wwwdir: "{{ p_homedir }}/www"
 p_root_public: "{{ p_wwwdir }}/{{ p_domain_main }}"
 
-p_root: "/home/{{ p_user }}/projects/{{ p_name }}"
+p_projects_root: "/home/{{ p_user }}/projects"
+p_root: "{{ p_projects_root }}/{{ p_name }}"
 p_data: "{{ p_root }}/data"
 
 p_log_root: "{{ p_root }}/log"
 p_log_update: "{{ p_log_root }}/docker-compose-update.log"
 
+p_nginx_user: www-data
 p_nginx_template: # deprecated
 p_nginx_config: # http or https, depends on p_ssl
 p_nginx_engine: service
 p_nginx_engine_server: # avoid to direct define this variable
-p_nginx_backend: "{% if p_nginx_engine == 'service' %}service{% else %}{% if p_nginx_engine == 'staic' %}none{% else %}apache{% endif %}{% endif %}"
+p_nginx_backend: "{% if p_nginx_engine == 'service' %}service{% else %}{% if p_nginx_engine == 'static' %}none{% else %}apache{% endif %}{% endif %}"
 p_nginx_http2: yes # use http2 for https sites
 p_nginx_robots_disallow: no
 
@@ -84,6 +86,22 @@ p_setup_zsh: False # настроит zsh терминал для юзера p_u
 p_user_zsh_template: user/zshrc.j2
 p_force_zshrc: False # перезапись ~/.zshrc
 p_nginx_docker: True # nginx в докере или внешний
+
+p_apache_user: www-data
+
+p_php_user: "{{ p_user }}"
+p_php_group: "{{ p_user }}"
+p_php_fpm_defaults:
+  pm: ondemand
+  pm.max_children: 10
+  pm.process_idle_timeout: 30 # worked keepalive, seconds
+  pm.start_servers: 1
+  pm.min_spare_servers: 1
+  pm.max_spare_servers: 3
+p_php_version: 7.4 # as in viasite-ansible.php-versions
+p_php_socket: "/var/run/php/{{ p_user }}-php{{ p_php_version }}.sock"
+p_php_fpm_pool_d: /etc/php/{{ p_php_version }}/fpm/pool.d
+p_php_fpm_service_name: php{{ p_php_version }}-fpm
 
 #p_cron_tasks:
 #  - name: "remove api uploads cache"
