@@ -11,10 +11,10 @@ p_is_test: no # для тестового сайта добавляется бл
 p_compose: # docker-compose.yml content
 p_compose_pull: # pull only these services
 
-p_domain: "{{ p_domains[0].domain }}"
+#p_domain: "{{ p_domains[0].domain }}"
 p_domains_secondary: []
 # www p_domain will be added automatically
-p_domains_redirected: "{% if 'redirected' in p_domains[0] %}{{ p_domains[0].redirected }}{% else %}[]{% endif %}"
+p_domains_redirected: []
 p_domains_remove: []
 
 p_domains: []
@@ -32,6 +32,7 @@ p_letsencrypt_acmesh_args: "--dns dns_cf" # или "--dns dns_selectel"
 p_letsencrypt_acmesh_env: "{{ letsencrypt_acmesh_env | default('CF_Token=') }}"
 
 p_user: deployer
+p_homedir_group: www-data # for nginx access
 p_user_group: "{{ p_user }}"
 
 p_homedir: "/home/{{ p_user }}"
@@ -46,10 +47,11 @@ p_log_update: "{{ p_log_root }}/docker-compose-update.log"
 
 p_nginx_template: # deprecated
 p_nginx_config: # http or https, depends on p_ssl
-p_nginx_engine: default
+p_nginx_engine: service
 p_nginx_engine_server: # avoid to direct define this variable
-p_nginx_backend: "{% if p_nginx_engine == 'service' %}service{% else %}apache{% endif %}"
+p_nginx_backend: "{% if p_nginx_engine == 'service' %}service{% else %}{% if p_nginx_engine == 'staic' %}none{% else %}apache{% endif %}{% endif %}"
 p_nginx_http2: yes # use http2 for https sites
+p_nginx_robots_disallow: no
 
 p_nginx_service_host: localhost
 
@@ -59,10 +61,15 @@ p_nginx_custom_server: "" # add to server in template end
 p_nginx_custom_root_location: "" # add to location / in template
 #apache_mpm_itk_max_clients_per_host: 30
 
+p_nginx_proxy_params: |
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto $scheme;
 
 p_ssl: yes
-p_ssl_certificate: "{{ p_letsencrypt_acmesh_deploy_path }}/{{ p_domains[0].acmesh_domains[0] }}.fullchain"
-p_ssl_certificate_key: "{{ p_letsencrypt_acmesh_deploy_path }}/{{ p_domains[0].acmesh_domains[0] }}.key"
+p_ssl_certificate: "{{ p_letsencrypt_acmesh_deploy_path }}/{{ domain.acmesh_domains[0] }}.fullchain"
+p_ssl_certificate_key: "{{ p_letsencrypt_acmesh_deploy_path }}/{{ domain.acmesh_domains[0] }}.key"
 p_ssl_hsts: yes
 p_ssl_redirect_main_domain: yes
 p_ssl_redirect_code: 301
@@ -90,10 +97,6 @@ p_cron_tasks: []
 p_cron_vars: []
 
 p_nginx_location_default: |
-  ## see more settings for mp3, ogg, mp4, flv at https://github.com/perusio/drupal-with-nginx
-
-  ## Replicate the Apache <FilesMatch> directive of Drupal standard
-  ## .htaccess. Disable access to any code files. Return a 404 to curtail
   ## information disclosure. Hide also the text files.
   location ~* ^(?:.+\.(?:htaccess|gitignore|make|txt|md|engine|inc|info|install|module|profile|po|sh|.*sql|theme|tpl(?:\.php)?|xtmpl)|code-style\.pl|/Entries.*|/Repository|/Root|/Tag|/Template)$ {
     return 404;
@@ -102,22 +105,7 @@ p_nginx_location_default: |
   location ~ /\.(hg|svn|git|bzr) {
     deny all;
   }
-  location /backup {
-    deny all;
-  }
-  location /build {
-    deny all;
-  }
-  location /logs {
-    deny all;
-  }
-  location /patches {
-    deny all;
-  }
-  location /tmp {
-    deny all;
-  }
-  location /modified.txt {
+  location ~ /(backup|build|log|patches|tmp|modified.txt) {
     deny all;
   }
 
@@ -126,13 +114,6 @@ p_nginx_location_default: |
     access_log off;
   }
 
-  ## RSS feed support.
-  location = /rss.xml {
-    try_files $uri @rewrite;
-  }
-
-  ## Support for favicon. Return a 204 (No Content) if the favicon
-  ## doesn't exist.
   location = /favicon.ico {
     access_log off;
     try_files /favicon.ico =204;

@@ -1,5 +1,3 @@
-index index.php index.html;
-
 location / {
   # p_nginx_location_static_files
   {{ p_nginx_location_static_files | indent(2) }}
@@ -7,15 +5,11 @@ location / {
   # p_nginx_location_default
   {{ p_nginx_location_default | indent(2) }}
 
-  # p_nginx_location_php
-  {{ p_nginx_location_php | indent(2) }}
-
-  # p_nginx_custom_root_location
-  {{ p_nginx_custom_root_location | default('') | indent(2) }}
+  # domain.nginx_custom_root_location
+  {{ domain.nginx_custom_root_location | default('') | indent(2) }}
 
   try_files $uri @rewrite;
 }
 
 # p_nginx_location_rewrite
 {{ p_nginx_location_rewrite }}
-

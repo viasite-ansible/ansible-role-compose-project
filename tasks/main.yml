@@ -3,7 +3,6 @@
   include_vars: "{{ project_vars_file }}"
   tags: [ site, always ]
 
-
 - name: Check that running all tasks
   command: /bin/true
   changed_when: False
@@ -24,8 +23,8 @@
   when: p_domains is defined and p_register_running_all is not defined
 
 - include_tasks: 1-3-letsencrypt.yml
-  tags: [ site, letsencrypt, ssl ]
-  when: domain.acmesh_domains is defined # and p_nginx_docker
+  tags: [ letsencrypt, ssl ]
+  when: domain.acmesh_domains is defined and domain.provider is defined # and p_nginx_docker
   with_items: "{{ p_domains }}"
   loop_control:
     loop_var: domain
@@ -33,8 +32,19 @@
 
 - include: 2-1-config.yml
 
-- import_tasks: 2-2-nginx.yml
+- include_tasks: 2-2-nginx.yml
   tags: [ config, nginx ] # never тег не катит, т.к. ломает --list-tags
+  when: domain_raw.acmesh_domains is defined or domain_raw.ssl is defined
+  with_items: "{{ p_domains }}"
+  loop_control:
+    loop_var: domain_raw
+
+- name: "{{ domain.domain}} : Ensure Diffie-Helmann parameters dhparam.pem exists when ssl site provisioned"
+  command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
+  args:
+    creates: /etc/ssl/certs/dhparam.pem
+  when: p_ssl
+  tags: [ config, nginx ]
 
 # TODO: чем include отличается от import_tasks?
 - import_tasks: 2-3-cron.yml
@@ -58,10 +68,11 @@
 - name: "Instance information"
   debug:
     msg: |
+      
       ************************************
 
       Domains:
-      {% for domain in p_domains %}https://{{ domain.domain }}
+      {% for domain in p_domains if 'acmesh_domains' in domain or 'ssl' in domain %}http{% if not 'ssl' in domain or domain.ssl %}s{% endif %}://{{ domain.domain }}
       {% endfor %}
 
       {% if p_update_sh is defined and p_update_sh is changed %}update.sh changes:

@@ -12,9 +12,9 @@
   file:
     path: "{{ p_homedir }}"
     state: directory
-    mode: 0700
+    mode: 0750
     owner: "{{ p_user }}"
-    group: "{{ p_user_group }}"
+    group: "{{ p_homedir_group }}"
   tags: [ user_create, permissions ]
 
 - name: "Project: check ~/.zshrc exists"

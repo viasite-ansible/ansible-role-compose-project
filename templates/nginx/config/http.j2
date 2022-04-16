@@ -3,25 +3,26 @@
 server {
   # Redirect to main domain
   listen 80;
-  server_name {{ p_domains_redirected_compiled | join(' ') }};
-  return 301 http://{{ p_domain }}$request_uri;
+  server_name {{ domain.domains_redirected | join(' ') }};
+  return 301 http://{{ domain.domain }}$request_uri;
 }
 
 server {
   listen 80;
-  server_name {{ p_domain }} {{ p_domains_secondary | join(' ') }};
+  server_name {{ domain.domain }} {{ domain.domains_secondary | join(' ') }};
   root {{ p_root_public }};
-  index index.php index.html;
 
-  # p_nginx_custom_server_before
-  {{ p_nginx_custom_server_before | default('') | indent(2) }}
+  {{ p_nginx_flags | indent(2) }}
+
+  # domain.nginx_custom_server_before
+  {{ domain.nginx_custom_server_before | default('') | indent(2) }}
 
   # p_nginx_engine_server
   {{ p_nginx_engine_server | indent(2) }}
 
-  # p_nginx_custom_server
-{{ p_nginx_custom_server | default('') | indent(2) }}
+  # domain.nginx_custom_server
+  {{ domain.nginx_custom_server | default('') | indent(2) }}
 }
 
-# p_nginx_custom_http
-{{ p_nginx_custom_http }}
+# domain.nginx_custom_http
+{{ domain.nginx_custom_http }}

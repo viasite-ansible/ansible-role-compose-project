@@ -1,6 +1,6 @@
 location / {
-  # p_nginx_custom_root_location
-  {{ p_nginx_custom_root_location | default('') | indent(2) }}
+  # domain.nginx_custom_root_location
+  {{ domain.nginx_custom_root_location | default('') | indent(2) }}
 
   try_files $uri @rewrite;
 }

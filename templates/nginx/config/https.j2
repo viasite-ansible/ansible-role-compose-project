@@ -2,65 +2,68 @@
 
 server {
   # Redirect https to main domain
-  listen 443 ssl{% if p_nginx_http2 %} http2{% endif %};
-  server_name {{ p_domains_redirected_compiled | join(' ') }}{% if p_ssl_redirect_main_domain %} {{ p_domains_secondary | join(' ') }}{% endif %};
-  ssl_certificate {{ p_ssl_certificate }};
-  ssl_certificate_key {{ p_ssl_certificate_key }};
-  return {{ p_ssl_redirect_code }} https://{{ p_domain }}$request_uri;
+  listen 443 ssl{% if domain.nginx_http2 %} http2{% endif %};
+  server_name {{ domain.domains_redirected | join(' ') }}{% if domain.ssl_redirect_main_domain %} {{ domain.domains_secondary | join(' ') }}{% endif %};
+  ssl_certificate {{ domain.ssl_certificate }};
+  ssl_certificate_key {{ domain.ssl_certificate_key }};
+  return {{ domain.ssl_redirect_code }} https://{{ domain.domain }}$request_uri;
 }
 
-{% if p_ssl_redirect_main_domain %}
+{% if domain.ssl_redirect_main_domain %}
 server {
   # Redirect http to main domain
   listen 80;
-  server_name {{ p_domain }} {{ p_domains_redirected_compiled | join(' ') }} {{ p_domains_secondary | join(' ') }};
-  return {{ p_ssl_redirect_code }} https://{{ p_domain }}$request_uri;
+  server_name {{ domain.domain }} {{ domain.domains_redirected | join(' ') }} {{ domain.domains_secondary | join(' ') }};
+  return {{ domain.ssl_redirect_code }} https://{{ domain.domain }}$request_uri;
 }
 
 {% else %}
 server {
   # Redirect to main domain
   listen 80;
-  server_name {{ p_domains_redirected_compiled | join(' ') }};
-  return {{ p_ssl_redirect_code }} https://{{ p_domain }}$request_uri;
+  server_name {{ domain.domains_redirected | join(' ') }};
+  return {{ domain.ssl_redirect_code }} https://{{ domain.domain }}$request_uri;
 }
 
 server {
   listen 80;
-  server_name {{ p_domain }} {{ p_domains_secondary | join(' ') }};
-  root {{ p_root_public }};
-  index index.php index.html;
+  server_name {{ domain.domain }} {{ domain.domains_secondary | join(' ') }};
+  root {{ domain.root_public }};
 
-  # p_nginx_custom_server_before
-  {{ p_nginx_custom_server_before | default('') | indent(2) }}
+  {{ p_nginx_flags | indent(2) }}
+
+  # domain.nginx_custom_server_before
+  {{ domain.nginx_custom_server_before | default('') | indent(2) }}
 
   # p_nginx_engine_server
   {{ p_nginx_engine_server | indent(2) }}
 
-  # p_nginx_custom_server
-  {{ p_nginx_custom_server | default('') | indent(2) }}
+  # domain.nginx_custom_server
+  {{ domain.nginx_custom_server | default('') | indent(2) }}
 }
 {% endif %}
 
 server {
-  listen 443 ssl{% if p_nginx_http2 %} http2{% endif %};
-  server_name {{ p_domain }}{% if not p_ssl_redirect_main_domain %} {{ p_domains_secondary | join(' ') }}{% endif %};
-  root {{ p_root_public }};
-  index index.php index.html;
+  listen 443 ssl{% if domain.nginx_http2 %} http2{% endif %};
+  server_name {{ domain.domain }}{% if not domain.ssl_redirect_main_domain %} {{ domain.domains_secondary | join(' ') }}{% endif %};
+  root {{ domain.root_public }};
 
-  ssl_certificate {{ p_ssl_certificate }};
-  ssl_certificate_key {{ p_ssl_certificate_key }};
-  {% if p_ssl_hsts %}add_header Strict-Transport-Security "max-age=15768000"; # HSTS{% endif %}
+  ssl_certificate {{ domain.ssl_certificate }};
+  ssl_certificate_key {{ domain.ssl_certificate_key }};
+  {% if domain.ssl_hsts %}add_header Strict-Transport-Security "max-age=15768000"; # HSTS{% endif %}
 
-  # p_nginx_custom_server_before
-  {{ p_nginx_custom_server_before | default('') | indent(2) }}
+
+  {{ p_nginx_flags | indent(2) }}
+
+  # domain.nginx_custom_server_before
+  {{ domain.nginx_custom_server_before | default('') | indent(2) }}
 
   # p_nginx_engine_server
   {{ p_nginx_engine_server | indent(2) }}
 
-  # p_nginx_custom_server
-  {{ p_nginx_custom_server | default('') | indent(2) }}
+  # domain.nginx_custom_server
+  {{ domain.nginx_custom_server | default('') | indent(2) }}
 }
 
-# p_nginx_custom_http
-{{ p_nginx_custom_http }}
+# domain.nginx_custom_http
+{{ domain.nginx_custom_http }}

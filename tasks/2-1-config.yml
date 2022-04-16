@@ -7,7 +7,7 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
   become: yes
-  when: p_compose is defined
+  when: p_compose is defined and p_compose
   with_items:
     - "{{ p_log_root }}"
     #- "{{ p_data }}/nginx/conf.d"
@@ -32,5 +32,5 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
     mode: "0755"
-  when: p_compose is defined
+  when: p_compose is defined and p_compose
   tags: [config, config-deploy]

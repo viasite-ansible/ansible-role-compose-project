@@ -1,8 +1,61 @@
 ---
-- name: "{{ p_domain}} : Define p_nginx_proxy_to_backend"
+
+- name: "{{ domain_raw.domain}} : Define domain secondary vars"
+  set_fact:
+    p_domain: "{{ domain_raw.domain }}"
+    p_domain_redirected: "{% if 'www.' in domain_raw.domain %}{{ domain_raw.domain | replace('www.', '') }}{% else %}www.{{ domain_raw.domain }}{% endif %}"
+    p_domain_main: "{{ domain_raw.domain | replace('www.', '') }}"
+    p_nginx_backend: "{% if domain_raw.nginx_engine == 'service' %}service{% else %}{% if domain_raw.nginx_engine == 'static' %}none{% else %}apache{% endif %}{% endif %}"
+    p_tmp_ssl: "{{ domain_raw.ssl | default(p_ssl) }}"
+    p_tmp_domain_remove: "{{ 'state' in domain_raw and domain_raw.state == 'absent' }}"
+    nginx_sites_empty: {} # need for role nginx-vhosts
+
+- name: "{{ domain_raw.domain}} : Define domain var"
+  set_fact:
+    p_domains_remove: "{{ [p_domain_main] if p_tmp_domain_remove else [] }}"
+    domain:
+      domain: "{{ domain_raw.domain }}"
+      domains_secondary: "{{ domain_raw.domains_secondary | default(p_domains_secondary) }}"
+      domains_redirected: "{{ domains_redirected | default([]) + [ p_domain_redirected ] }}"
+
+      ssl: "{{ p_tmp_ssl }}"
+      acmesh_domains: "{{ domain_raw.acmesh_domains | default(omit) }}"
+      ssl_certificate: "{{ p_letsencrypt_acmesh_deploy_path + '/' + domain_raw.acmesh_domains[0] + '.fullchain' if p_tmp_ssl else omit }}"
+      ssl_certificate_key: "{{ p_letsencrypt_acmesh_deploy_path + '/' + domain_raw.acmesh_domains[0] + '.key' if p_tmp_ssl else omit }}"
+      ssl_redirect_main_domain: "{{ domain_raw.ssl_redirect_main_domain | default(p_ssl_redirect_main_domain) if p_tmp_ssl else omit }}"
+      ssl_redirect_code: "{{ domain_raw.ssl_redirect_code | default(p_ssl_redirect_code) if p_tmp_ssl else omit }}"
+      ssl_hsts: "{{ domain_raw.ssl_hsts | default(p_ssl_hsts) if p_tmp_ssl else omit }}"
+
+      #provider: "{{ domain_raw.provider | default(omit) }}"
+      nginx_backend: "{{ domain_raw.nginx_backend | default(p_nginx_backend) }}"
+      nginx_engine: "{{ domain_raw.nginx_engine | default(p_nginx_engine) }}"
+      nginx_robots_disallow: "{{ domain_raw.nginx_robots_disallow | default(p_nginx_robots_disallow) }}"
+      root_public: "{{ domain_raw.root_public | default(p_root_public) }}"
+      nginx_http2: "{{ domain_raw.nginx_http2 | default(p_nginx_http2) }}"
+      nginx_service_host: "{{ domain_raw.nginx_service_host | default(p_nginx_service_host) }}"
+      nginx_service_port: "{{ domain_raw.nginx_service_port | default(p_nginx_service_port | default(omit)) }}"
+      nginx_custom_server_before: "{{ domain_raw.nginx_custom_server_before | default(p_nginx_custom_server_before) }}"
+      nginx_custom_server: "{{ domain_raw.nginx_custom_server | default(p_nginx_custom_server) }}"
+      nginx_custom_root_location: "{{ domain_raw.nginx_custom_root_location | default(p_nginx_custom_root_location) }}"
+      nginx_custom_http: "{{ domain_raw.nginx_custom_http | default(p_nginx_custom_http) }}"
+
+- name: "{{ domain.domain}} : Mkdir {{ domain.root_public}}"
+  file:
+    path: "{{ domain.root_public }}"
+    state: directory
+    recurse: yes
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  when: not p_tmp_domain_remove
+
+- debug:
+    var: domain
+  when: not p_tmp_domain_remove
+
+- name: "{{ domain.domain}} : Define p_nginx_proxy_to_backend"
   set_fact:
     p_nginx_proxy_to_backend: |
-      {% if p_nginx_backend == 'apache' %}
+      {% if domain.nginx_backend == 'apache' %}
       proxy_pass http://apache;
       {{ p_nginx_proxy_params }}
       # for pass Basic auth from nginx to php-fpm for bitrix
@@ -11,16 +64,28 @@
       proxy_set_header Authorization $http_authorization;
       {% endif %}
 
-      {% if p_nginx_backend == 'php-fpm' %}
-      include {% if p_nginx_engine == 'drupal' %}snippets/fastcgi_drupal.conf{% else %}fastcgi.conf{% endif %};
+      {% if domain.nginx_backend == 'php-fpm' %}
+      include {% if domain.nginx_engine == 'drupal' %}snippets/fastcgi_drupal.conf{% else %}fastcgi.conf{% endif %};
       fastcgi_pass unix:{{ p_php_socket }};{% endif %}
 
-      {% if p_nginx_backend == 'service' %}
-      proxy_pass http://{{ p_nginx_service_host }}{% if p_nginx_service_port is defined %}:{{ p_nginx_service_port }}{% endif %};
+      {% if domain.nginx_backend == 'service' %}
+      proxy_pass http://{{ domain.nginx_service_host }}{% if 'nginx_service_port' in domain %}:{{ domain.nginx_service_port }}{% endif %};
       {{ p_nginx_proxy_params }}
       {% endif %}
+  when: not p_tmp_domain_remove
 
-- name: "{{ p_domain}} : Define p_nginx_location_php"
+- name: "{{ domain.domain}} : Define p_nginx_flags"
+  set_fact:
+    p_nginx_flags: |
+      {% if domain.nginx_robots_disallow %}
+      location = /robots.txt {
+        add_header  Content-Type text/plain;
+        return 200 "User-agent: *\nDisallow: /\n";
+      }
+      {% endif %}
+  when: not p_tmp_domain_remove
+
+- name: "{{ domain.domain}} : Define p_nginx_location_php"
   set_fact:
     p_nginx_location_php: |
       # need for urls such /index.php
@@ -28,42 +93,37 @@
         {{ p_nginx_proxy_to_backend | indent(2) }}
       }
 
-- name: "{{ p_domain}} : Define p_nginx_location_rewrite"
+- name: "{{ domain.domain}} : Define p_nginx_location_rewrite"
   set_fact:
     p_nginx_location_rewrite: |
       location @rewrite {
         access_log /var/log/nginx/access.log combined_host;
         access_log /var/log/nginx/access_time.log combined_host_time;
-
-        {{ p_nginx_proxy_to_backend | indent(2) }}
-
         {% if nginx_cloudflare_log is defined and nginx_cloudflare_log %}
         access_log /var/log/nginx/access.log combined_host;
         access_log /var/log/nginx/access_cloudflare.log combined_host_cloudflare;{% endif %}
+
+        {{ p_nginx_proxy_to_backend | indent(2) }}
       }
       # end of @rewrite
+  when: not p_tmp_domain_remove
 
-- name: "{{ p_domain}} : Define p_nginx_engine_server"
+- name: "{{ domain.domain}} : Define p_nginx_engine_server"
   set_fact:
-    p_nginx_engine_server: "{{ lookup('template', 'nginx/engine/' + p_nginx_engine + '.j2') }}"
-  when: not p_nginx_engine_server
+    p_nginx_engine_server: "{{ lookup('template', 'nginx/engine/' + domain.nginx_engine + '.j2') }}"
+  when: not p_nginx_engine_server and not p_tmp_domain_remove
 
-- name: "{{ p_domain}} : Define p_nginx_config"
+- name: "{{ domain.domain}} : Define p_nginx_config"
   set_fact:
-    p_nginx_config: "{% if p_ssl %}https{% else %}http{% endif %}"
-  when: not p_nginx_config
+    p_nginx_config: "{% if domain.ssl %}https{% else %}http{% endif %}"
+  when: not p_nginx_config and not p_tmp_domain_remove
 
-- name: "{{ p_domain}} : Define p_nginx_template"
+- name: "{{ domain.domain}} : Define p_nginx_template"
   set_fact:
     p_nginx_template: "nginx/config/{{ p_nginx_config }}.j2"
-  when: not p_nginx_template
+  when: not p_nginx_template and not p_tmp_domain_remove
 
-
-- name: "{{ p_domain}} : Generate variables"
-  set_fact:
-    nginx_sites_empty: {}
-
-- name: "{{ p_domain}} : Setup nginx vhost"
+- name: "{{ domain.domain}} : Setup nginx vhost"
   include_role:
     name: nginx-vhosts
   vars:
@@ -71,9 +131,3 @@
       p_domain_main: { 'template': p_nginx_template }
     }) }}"
     nginx_remove_sites: "{{ p_domains_remove }}"
-
-- name: "{{ p_domain}} : Ensure Diffie-Helmann parameters dhparam.pem exists when ssl site provisioned"
-  command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
-  args:
-    creates: /etc/ssl/certs/dhparam.pem
-  when: p_ssl
