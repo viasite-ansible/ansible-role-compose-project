@@ -5,7 +5,7 @@
     p_domain: "{{ domain_raw.domain }}"
     p_domain_redirected: "{% if 'www.' in domain_raw.domain %}{{ domain_raw.domain | replace('www.', '') }}{% else %}www.{{ domain_raw.domain }}{% endif %}"
     p_domain_main: "{{ domain_raw.domain | replace('www.', '') }}"
-    p_nginx_backend: "{% if domain_raw.nginx_engine == 'service' %}service{% else %}{% if domain_raw.nginx_engine == 'static' %}none{% else %}apache{% endif %}{% endif %}"
+    p_nginx_backend: "{% if domain_raw.nginx_engine | default(p_nginx_engine) == 'service' %}service{% else %}{% if domain_raw.nginx_engine | default(p_nginx_engine) == 'static' %}none{% else %}apache{% endif %}{% endif %}"
     p_tmp_ssl: "{{ domain_raw.ssl | default(p_ssl) }}"
     p_tmp_domain_remove: "{{ 'state' in domain_raw and domain_raw.state == 'absent' }}"
     nginx_sites_empty: {} # need for role nginx-vhosts
@@ -108,10 +108,10 @@
       # end of @rewrite
   when: not p_tmp_domain_remove
 
-- name: "{{ domain.domain}} : Define p_nginx_engine_server"
+- name: "{{ domain.domain}} : Define _p_nginx_engine_server"
   set_fact:
-    p_nginx_engine_server: "{{ lookup('template', 'nginx/engine/' + domain.nginx_engine + '.j2') }}"
-  when: not p_nginx_engine_server and not p_tmp_domain_remove
+    _p_nginx_engine_server: "{{ lookup('template', 'nginx/engine/' + domain.nginx_engine + '.j2') }}"
+  when: not p_tmp_domain_remove
 
 - name: "{{ domain.domain}} : Define p_nginx_config"
   set_fact:

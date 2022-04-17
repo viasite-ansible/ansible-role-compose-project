@@ -50,7 +50,6 @@ p_nginx_user: www-data
 p_nginx_template: # deprecated
 p_nginx_config: # http or https, depends on p_ssl
 p_nginx_engine: service
-p_nginx_engine_server: # avoid to direct define this variable
 p_nginx_backend: "{% if p_nginx_engine == 'service' %}service{% else %}{% if p_nginx_engine == 'static' %}none{% else %}apache{% endif %}{% endif %}"
 p_nginx_http2: yes # use http2 for https sites
 p_nginx_robots_disallow: no

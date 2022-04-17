@@ -35,8 +35,8 @@ server {
   # domain.nginx_custom_server_before
   {{ domain.nginx_custom_server_before | default('') | indent(2) }}
 
-  # p_nginx_engine_server
-  {{ p_nginx_engine_server | indent(2) }}
+  # _p_nginx_engine_server
+  {{ _p_nginx_engine_server | indent(2) }}
 
   # domain.nginx_custom_server
   {{ domain.nginx_custom_server | default('') | indent(2) }}
@@ -58,8 +58,8 @@ server {
   # domain.nginx_custom_server_before
   {{ domain.nginx_custom_server_before | default('') | indent(2) }}
 
-  # p_nginx_engine_server
-  {{ p_nginx_engine_server | indent(2) }}
+  # _p_nginx_engine_server
+  {{ _p_nginx_engine_server | indent(2) }}
 
   # domain.nginx_custom_server
   {{ domain.nginx_custom_server | default('') | indent(2) }}
