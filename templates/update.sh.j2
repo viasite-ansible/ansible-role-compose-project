@@ -7,8 +7,8 @@ cd "{{ p_root }}"
 > "{{ p_log_update }}.last"
 echo "Commencing docker-compose update `date`" >> "{{ p_log_update }}.last"
 # Do a pull then an update
-/usr/local/bin/docker-compose --no-ansi pull {{ p_compose_pull }} 2>&1 >> "{{ p_log_update }}.last"
-/usr/local/bin/docker-compose --no-ansi up -d 2>&1 >> "{{ p_log_update }}.last"
+/usr/local/bin/docker-compose --ansi never pull {{ p_compose_pull }} 2>&1 >> "{{ p_log_update }}.last"
+/usr/local/bin/docker-compose --ansi never up -d 2>&1 >> "{{ p_log_update }}.last"
 {% if p_nginx_docker %}/usr/local/bin/docker-compose exec nginx nginx -s reload 2>&1 >> "{{ p_log_update }}.last"{% endif %}
 {% if not p_nginx_docker %}service nginx reload{% endif %}
 
