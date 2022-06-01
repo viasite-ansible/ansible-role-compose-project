@@ -27,6 +27,8 @@ p_dns_cloudflare_token: # для dns и letsencrypt через dns
 #p_dns_domains:
 p_dns_ttl: 3600
 
+p_cf_zones: []
+
 p_letsencrypt_acmesh_deploy_path: "{% if p_name %}{{ p_data }}/certs{% else %}{{ p_homedir }}/certs{% endif %}"
 p_letsencrypt_acmesh_args: "--dns dns_cf" # или "--dns dns_selectel"
 p_letsencrypt_acmesh_env: "{{ letsencrypt_acmesh_env | default('CF_Token=') }}"

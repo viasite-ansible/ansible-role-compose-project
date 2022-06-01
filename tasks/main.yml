@@ -22,6 +22,14 @@
   tags: [ dns ] # never тег не катит, т.к. ломает --list-tags
   when: p_domains is defined and p_register_running_all is not defined
 
+- include_tasks: dns_zone_cloudflare.yml
+  with_items: "{{ p_cf_zones }}"
+  #  when: domain.provider == "cloudflare" and domain.records is defined
+  tags: [ dns, cf ] # never тег не катит, т.к. ломает --list-tags
+  when: p_cf_zones is defined and p_register_running_all is not defined
+  loop_control:
+    loop_var: domain
+
 - include_tasks: 1-3-letsencrypt.yml
   tags: [ letsencrypt, ssl ]
   when: domain.acmesh_domains is defined and domain.provider is defined # and p_nginx_docker
