@@ -25,6 +25,46 @@
     - "{{ p_dirs }}"
   tags: [config]
 
+- name: Create p_configs
+  copy:
+    dest: "{{ item.path }}"
+    content: "{{ item.content }}"
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  become: yes
+  with_items:
+    - "{{ p_configs }}"
+  tags: [config]
+
+- name: Check .env exists
+  stat:
+    path: "{{ p_root }}/.env"
+  changed_when: False
+  register: _p_register_env
+  when: p_compose_env is defined
+  tags: [ config, docker, config-docker-compose ]
+
+- name: Create .env
+  file:
+    path: "{{ p_root }}/.env"
+    state: touch
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  when: p_compose_env is defined and not _p_register_env.stat.exists
+  register: _p_create_env
+  tags: [ config, docker, config-docker-compose ]
+
+- name: Update .env file
+  lineinfile:
+    path: "{{ p_root }}/.env"
+    regexp: '^{{ item.key }}'
+    line: '{{ item.key }}={{ item.value }}'
+  become: yes
+  with_dict:
+    - "{{ p_compose_env }}"
+  when: p_compose_env is defined and (_p_register_env.stat.exists or _p_create_env is changed)
+  tags: [ config, docker, config-docker-compose ]
+
 - name: Write update.sh
   template:
     src: update.sh.j2

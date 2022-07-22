@@ -12,7 +12,3 @@
 #  with_items: "{{ domain.records }}"
 #  loop_control:
 #    loop_var: record
-
-- name: "{{ domain.domain }} : Changes"
-  debug: msg="{{ _p_dns_cf_output.state }}"
-  when: _p_dns_cf_output is changed

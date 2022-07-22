@@ -11,8 +11,10 @@ Based on role site - https://github.com/viasite-ansible/ansible-role-site
 #### Settings
 See `defaults/main.yml`.
 
+```
 arole compose-project --limit popstas_server
 arole compose-project --limit popstas_server --tags init-db
+```
 
 ## Details
 - Creates `cp_root` dir, `cp_root/data`, places configs in data, run update.sh

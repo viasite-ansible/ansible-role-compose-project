@@ -31,21 +31,22 @@
     loop_var: domain
 
 - include_tasks: 1-3-letsencrypt.yml
-  tags: [ letsencrypt, ssl ]
   when: domain.acmesh_domains is defined and domain.provider is defined # and p_nginx_docker
   with_items: "{{ p_domains }}"
   loop_control:
     loop_var: domain
+  tags: [ letsencrypt, ssl ]
 
 
 - include: 2-1-config.yml
+  tags: [ config ]
 
 - include_tasks: 2-2-nginx.yml
-  tags: [ config, nginx ] # never тег не катит, т.к. ломает --list-tags
   when: domain_raw.acmesh_domains is defined or domain_raw.ssl is defined
   with_items: "{{ p_domains }}"
   loop_control:
     loop_var: domain_raw
+  tags: [ config, nginx ] # never тег не катит, т.к. ломает --list-tags
 
 - name: "{{ domain.domain}} : Ensure Diffie-Helmann parameters dhparam.pem exists when ssl site provisioned"
   command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
@@ -54,17 +55,16 @@
   when: p_ssl
   tags: [ config, nginx ]
 
-- debug: var=p_nginx_backend
 - import_tasks: 2-3-php.yml
   when: p_nginx_backend == 'apache'
   tags: [ php ]
 
 - include_tasks: 2-4-apache.yml
-  tags: [ apache, apache_vhosts ]
   when: p_nginx_backend == 'apache' and domain_raw.acmesh_domains is defined or domain_raw.ssl is defined
   with_items: "{{ p_domains }}"
   loop_control:
     loop_var: domain_raw
+  tags: [ apache, apache_vhosts ]
 
 # TODO: чем include отличается от import_tasks?
 - import_tasks: 3-1-cron.yml
@@ -79,6 +79,7 @@
 
 - include_tasks: 4-1-compose-deploy.yml
   when: p_compose is defined and p_compose
+  tags: [ deploy, docker ]
 
 - include: init-db.yml
   when: p_register_running_all is not defined
@@ -96,7 +97,7 @@
       {% endfor %}
 
       {% if p_update_sh is defined and p_update_sh is changed %}update.sh changes:
-      {{ p_update_sh.stdout_lines | select('match', '^(Creating|Recreating|Starting).*') | list | join('\n') | indent(4) }}
+      {{ p_update_sh.stdout_lines | select('match', '.*(Created|Recreated)') | list | join('\n') | indent(4) }}
 
       {% endif %}
       ************************************
