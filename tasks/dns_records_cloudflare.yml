@@ -17,7 +17,6 @@
     account_email: "{{ p_dns_cloudflare_email | default(omit) }}"
     api_token: "{{ p_dns_cloudflare_token }}"
 #  delegate_to: localhost
-  delegate_to: localhost
   with_items: "{{ domain.records }}"
   loop_control:
     loop_var: record

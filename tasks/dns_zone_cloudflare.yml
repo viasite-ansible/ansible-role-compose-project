@@ -7,7 +7,6 @@
     api_token: "{{ p_dns_cloudflare_token }}"
     security_level: "{{ domain.security_level | default(omit) }}"
 #  delegate_to: localhost
-  delegate_to: localhost
   register: _p_dns_cf_output
 #  with_items: "{{ domain.records }}"
 #  loop_control:
