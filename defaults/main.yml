@@ -49,6 +49,9 @@ p_projects_root: "/home/{{ p_user }}/projects"
 p_root: "{{ p_projects_root }}/{{ p_name }}"
 p_data: "{{ p_root }}/data"
 
+p_git_clone:
+p_git_version:
+
 p_log_root: "{{ p_root }}/log"
 p_log_update: "{{ p_log_root }}/docker-compose-update.log"
 

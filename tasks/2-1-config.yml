@@ -1,4 +1,22 @@
 ---
+- name: "Check if {{ p_root }} exists"
+  stat: "path={{ p_root }}"
+  register: p_register_p_root
+  ignore_errors: True
+  tags: [config, git]
+
+- debug:
+    var: p_register_p_root
+  tags: [config, git]
+
+- name: Clone git to project root
+  git:
+    repo: "{{ p_git_clone }}"
+    dest: "{{ p_root }}"
+    version: "{{ p_git_version | default(omit) }}"
+  when: "{{ not p_register_p_root.stat.exists|default(false) }} and p_git_clone is defined and p_git_clone"
+  tags: [config, git]
+
 - name: Mkdir config dirs
   file:
     path: "{{ item }}"
@@ -27,7 +45,7 @@
 
 - name: Create p_configs
   copy:
-    dest: "{{ item.path }}"
+    dest: "{{ p_root }}/{{ item.path }}"
     content: "{{ item.content }}"
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
