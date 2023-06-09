@@ -21,7 +21,7 @@ p_domains: []
 p_dirs: []
 p_configs: []
 
-#p_compose_env:
+#p_env:
 #  KEY: value
 
 p_dns_provider: cloudflare # или selectel
