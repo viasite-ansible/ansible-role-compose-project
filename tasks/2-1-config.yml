@@ -60,7 +60,7 @@
   changed_when: False
   register: _p_register_env
   when: p_env is defined
-  tags: [ config, docker, config-docker-compose ]
+  tags: [ config, docker, config-docker-compose, config-api ]
 
 - name: Create .env
   file:
@@ -70,7 +70,7 @@
     group: "{{ p_user_group }}"
   when: p_env is defined and not _p_register_env.stat.exists
   register: _p_create_env
-  tags: [ config, docker, config-docker-compose ]
+  tags: [ config, docker, config-docker-compose, config-api ]
 
 - name: Update .env file
   lineinfile:
@@ -81,7 +81,7 @@
   with_dict:
     - "{{ p_env }}"
   when: p_env is defined and (_p_register_env.stat.exists or _p_create_env is changed)
-  tags: [ config, docker, config-docker-compose ]
+  tags: [ config, docker, config-docker-compose, config-api ]
 
 - name: Write update.sh
   template:
