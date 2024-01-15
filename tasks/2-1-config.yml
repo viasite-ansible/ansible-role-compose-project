@@ -5,16 +5,25 @@
   ignore_errors: True
   tags: [config, git]
 
-- debug:
-    var: p_register_p_root
-  tags: [config, git]
+- name: "Define p_root_exists"
+  set_fact:
+    p_root_exists: "{{ p_register_p_root.stat.exists|default(false) }}"
+
+- name: "Check if {{ p_root }} empty"
+  command: "find {{ p_root }} -type f -print -quit"
+  changed_when: False
+  register: p_register_root_files
+
+- name: "Define p_root_empty"
+  set_fact:
+    p_root_empty: "{{ p_register_root_files.stdout == '' }}"
 
 - name: Clone git to project root
   git:
     repo: "{{ p_git_clone }}"
     dest: "{{ p_root }}"
     version: "{{ p_git_version | default(omit) }}"
-  when: "{{ not p_register_p_root.stat.exists|default(false) }} and p_git_clone is defined and p_git_clone"
+  when: "(not p_root_exists or p_root_empty) and p_git_clone is defined and p_git_clone"
   tags: [config, git]
 
 - name: Mkdir config dirs
