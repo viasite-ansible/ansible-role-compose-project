@@ -96,6 +96,10 @@
       {% for domain in p_domains if 'acmesh_domains' in domain or 'ssl' in domain %}http{% if not 'ssl' in domain or domain.ssl %}s{% endif %}://{{ domain.domain }}
       {% endfor %}
 
+      {% if p_compose_version %} 
+      {{ p_update_sh.stdout_lines | select('match', 'Version:.*') | list | join('\n') | indent(4) }}
+      {% endif %}
+      
       {% if p_update_sh is defined and p_update_sh is changed %}update.sh changes:
       {{ p_update_sh.stdout_lines | select('match', '.*(Created|Recreated)') | list | join('\n') | indent(4) }}
 

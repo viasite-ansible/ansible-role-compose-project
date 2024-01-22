@@ -18,3 +18,6 @@ echo "Commencing docker-compose update `date`" >> "{{ p_log_update }}.last"
 docker volume prune -f
 echo "Finishing docker-compose update `date`" 2>&1 | >> "{{ p_log_update }}.last"
 cat "{{ p_log_update }}.last" >> "{{ p_log_update }}"
+{% if p_compose_version %}
+echo "Version: "$(/usr/local/bin/docker-compose exec {{ p_compose_version }})""
+{% endif %}
