@@ -14,12 +14,12 @@
 
 - include_tasks: dns_records_cloudflare.yml
   with_items: "{{ p_domains }}"
-  when: domain.provider == "cloudflare" and domain.records is defined
+  when: domain.provider == "cloudflare" and domain.records is defined and (not domain_only is defined or domain.domain == domain_only)
   loop_control:
     loop_var: domain
 
 - include_tasks: dns_records_selectel.yml
   with_items: "{{ p_domains }}"
-  when: domain.provider == "selectel" and domain.records is defined #  or p_dns_provider == "selectel"
+  when: domain.provider == "selectel" and domain.records is defined and (not domain_only is defined or domain.domain == domain_only) #  or p_dns_provider == "selectel"
   loop_control:
     loop_var: domain
