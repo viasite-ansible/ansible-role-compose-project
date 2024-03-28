@@ -9,6 +9,16 @@
   set_fact:
     p_root_exists: "{{ p_register_p_root.stat.exists|default(false) }}"
 
+- name: "Create {{ p_root }}"
+  file:
+    path: "{{ p_root }}"
+    state: directory
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+  become: yes
+  when: not p_root_exists
+  tags: [config]
+
 - name: "Check if {{ p_root }} empty"
   command: "find {{ p_root }} -type f -print -quit"
   changed_when: False
