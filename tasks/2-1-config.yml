@@ -71,7 +71,7 @@
   become: yes
   with_items:
     - "{{ p_configs }}"
-  tags: [config]
+  tags: [config, configs, config-docker-compose]
 
 - name: Create data/config.yml from p_config_yml
   copy:
@@ -81,7 +81,7 @@
     group: "{{ p_user_group }}"
   become: yes
   when: p_config_yml
-  tags: [config]
+  tags: [config, config-yml, config-docker-compose]
 
 - name: Check .env exists
   stat:
