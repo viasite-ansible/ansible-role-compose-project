@@ -76,7 +76,7 @@
 - name: Create data/config.yml from p_config_yml
   copy:
     dest: "{{ p_data }}/config.yml"
-    content: "{{ p_config_yml }}"
+    content: "{{ p_config_yml | to_nice_yaml(indent=2) }}"
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
   become: yes
