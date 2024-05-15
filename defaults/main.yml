@@ -63,8 +63,10 @@ p_nginx_engine: service
 p_nginx_backend: "{% if p_nginx_engine == 'service' %}service{% else %}{% if p_nginx_engine == 'static' %}none{% else %}apache{% endif %}{% endif %}"
 p_nginx_http2: yes # use http2 for https sites
 p_nginx_robots_disallow: no
+p_nginx_126_plus: false # http2 syntax was changed
 
 p_nginx_service_host: localhost
+p_nginx_service_port:
 
 p_nginx_custom_http: "" # add after server in template
 p_nginx_custom_server_before: "" # add to server in template begin

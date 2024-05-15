@@ -2,7 +2,10 @@
 
 server {
   # Redirect https to main domain
-  listen 443 ssl{% if domain.nginx_http2 %} http2{% endif %};
+  listen 443 ssl{% if not p_nginx_126_plus and domain.nginx_http2%} http2{% endif %};
+  {% if p_nginx_126_plus and domain.nginx_http2 %}http2 on;
+{% endif %}
+
   server_name {{ domain.domains_redirected | join(' ') }}{% if domain.ssl_redirect_main_domain %} {{ domain.domains_secondary | join(' ') }}{% endif %};
   ssl_certificate {{ domain.ssl_certificate }};
   ssl_certificate_key {{ domain.ssl_certificate_key }};
@@ -44,7 +47,10 @@ server {
 {% endif %}
 
 server {
-  listen 443 ssl{% if domain.nginx_http2 %} http2{% endif %};
+  listen 443 ssl{% if not p_nginx_126_plus and domain.nginx_http2%} http2{% endif %};
+  {% if p_nginx_126_plus and domain.nginx_http2 %}http2 on;
+{% endif %}
+
   server_name {{ domain.domain }}{% if not domain.ssl_redirect_main_domain %} {{ domain.domains_secondary | join(' ') }}{% endif %};
   root {{ domain.root_public }};
 
