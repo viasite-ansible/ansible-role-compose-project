@@ -16,7 +16,7 @@
 
 
 
-- include: 1-1-user.yml
+- include_tasks: 1-1-user.yml
 
 - import_tasks: 1-2-dns.yml
   tags: [ dns ] # never тег не катит, т.к. ломает --list-tags
@@ -38,8 +38,8 @@
   tags: [ letsencrypt, ssl ]
 
 
-- include: 2-1-config.yml
-  tags: [ config ]
+- include_tasks: 2-1-config.yml
+  tags: [ config, config-docker-compose ]
 
 - include_tasks: 2-2-nginx.yml
   when: domain_raw.acmesh_domains is defined or domain_raw.ssl is defined
@@ -75,13 +75,14 @@
     name: docker
     state: present
   become: true
+  when: ansible_distribution_version is version_compare('24.04', '<') # externally-managed-environment
   tags: [ docker ]
 
 - include_tasks: 4-1-compose-deploy.yml
   when: p_compose is defined and p_compose
   tags: [ deploy, docker ]
 
-- include: init-db.yml
+- include_tasks: init-db.yml
   when: p_register_running_all is not defined
   tags: [ init-db ]
 
