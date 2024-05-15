@@ -11,6 +11,7 @@ p_is_test: no # для тестового сайта добавляется бл
 p_compose: # docker-compose.yml content
 p_compose_pull: # pull only these services
 p_compose_version: '' # service_name command --version
+p_compose_build: no # build on update.sh
 #p_domain: "{{ p_domains[0].domain }}"
 p_domains_secondary: []
 # www p_domain will be added automatically

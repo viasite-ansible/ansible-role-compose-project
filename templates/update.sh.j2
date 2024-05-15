@@ -3,21 +3,30 @@
 set -e
 trap 'cat "{{ p_log_update }}.last"' EXIT
 
+docker_compose_native="$(docker --help | grep -c compose)"
+if [ "$docker_compose_native" = 1 ]; then
+  compose_bin="docker compose"
+else
+  compose_bin="docker-compose"
+fi
+
 cd "{{ p_root }}"
 > "{{ p_log_update }}.last"
 echo "Commencing docker-compose update `date`" >> "{{ p_log_update }}.last"
 # Do a pull then an update
-/usr/local/bin/docker-compose --ansi never pull {{ p_compose_pull }} 2>&1 >> "{{ p_log_update }}.last"
-/usr/local/bin/docker-compose --ansi never up -d 2>&1 >> "{{ p_log_update }}.last"
-{% if p_nginx_docker %}/usr/local/bin/docker-compose exec nginx nginx -s reload 2>&1 >> "{{ p_log_update }}.last"{% endif %}
+${compose_bin} --ansi never pull {{ p_compose_pull }} 2>&1 >> "{{ p_log_update }}.last"
+${compose_bin} --ansi never up -d 2>&1 >> "{{ p_log_update }}.last"
+{% if p_nginx_docker %}${compose_bin} exec nginx nginx -s reload 2>&1 >> "{{ p_log_update }}.last"{% endif %}
 {% if not p_nginx_docker %}service nginx reload{% endif %}
+
+{% if p_compose_build %}${compose_bin} build{% endif %}
 
 #echo "Sleeping 10 seconds." 2>&1 | >> "{{ p_log_update }}.last"
 #sleep 10
-#/usr/local/bin/docker-compose restart 2>&1 | >> "{{ p_log_update }}.last"
+#${compose_bin restart 2>&1 | >> "{{ p_log_update }}.last"
 docker volume prune -f
 echo "Finishing docker-compose update `date`" 2>&1 | >> "{{ p_log_update }}.last"
 cat "{{ p_log_update }}.last" >> "{{ p_log_update }}"
 {% if p_compose_version %}
-echo "Version: "$(/usr/local/bin/docker-compose exec {{ p_compose_version }})""
+echo "Version: "$(${compose_bin} exec {{ p_compose_version }})""
 {% endif %}
