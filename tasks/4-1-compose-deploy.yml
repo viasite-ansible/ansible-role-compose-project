@@ -6,7 +6,7 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
   become: yes
-  tags: [config, docker, config-docker, deploy]
+  tags: [docker, deploy, config, config-docker]
 
 - name: Write update.sh
   template:
@@ -15,7 +15,7 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
     mode: "0755"
-  tags: [config, config-docker]
+  tags: [docker, deploy, config, config-docker]
 
 - name: Run update.sh
   shell: "{{ p_root }}/update.sh" # | grep -vE '(up-to-date|Pulling)'

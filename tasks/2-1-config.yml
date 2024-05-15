@@ -112,7 +112,7 @@
   when: p_env is defined and (_p_register_env.stat.exists or _p_create_env is changed)
   tags: [ config, docker, config-docker-compose, config-api ]
 
-- name: Write update.sh
+- name: "Write update.sh to {{ p_root }}"
   template:
     src: update.sh.j2
     dest: "{{ p_root }}/update.sh"

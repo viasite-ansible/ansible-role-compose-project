@@ -12,3 +12,4 @@
 #  with_items: "{{ domain.records }}"
 #  loop_control:
 #    loop_var: record
+  tags: [ dns, cf ]

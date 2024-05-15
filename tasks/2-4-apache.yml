@@ -6,6 +6,7 @@
     p_domain_redirected: "{% if 'www.' in domain_raw.domain %}{{ domain_raw.domain | replace('www.', '') }}{% else %}www.{{ domain_raw.domain }}{% endif %}"
     p_domain_main: "{{ domain_raw.domain | replace('www.', '') }}"
     p_tmp_domain_remove: "{{ 'state' in domain_raw and domain_raw.state == 'absent' }}"
+  tags: [ apache, apache_vhosts ]
 
 - name: "{{ domain_raw.domain}} : Define domain var"
   set_fact:
@@ -15,6 +16,7 @@
       domains_secondary: "{{ domain_raw.domains_secondary | default(p_domains_secondary) }}"
       domains_redirected: "{{ domains_redirected | default([]) + [ p_domain_redirected ] }}"
       root_public: "{{ domain_raw.root_public | default(p_root_public) }}"
+  tags: [ apache, apache_vhosts ]
 
 - name: "{{ domain.domain}} : Generate apache variables"
   set_fact:
@@ -50,6 +52,7 @@
         SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
         SetEnvIf X-Forwarded-Proto https HTTPS=on
         SetEnvIf X-HTTPS 1 HTTPS=on
+  tags: [ apache, apache_vhosts ]
 
 - name: "{{ p_domain}} : Setup apache vhost"
   include_role:
@@ -59,4 +62,4 @@
         p_domain_main: apache_vhosts_sites_data
       }) }}"
     apache_vhosts_remove_sites: "{{ p_domains_remove }}"
-  tags: [apache]
+  tags: [ apache, apache_vhosts ]

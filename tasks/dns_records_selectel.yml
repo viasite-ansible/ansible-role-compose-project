@@ -5,6 +5,7 @@
     state: present
     api_token: "{{ p_dns_selectel_token }}"
   delegate_to: localhost
+  tags: [ dns, cf ]
 
 - name: "{{ domain.domain }} : Ensure records exists in domain (Selectel)"
   selectel_dns:
@@ -19,3 +20,4 @@
     api_token: "{{ p_dns_selectel_token }}"
   delegate_to: localhost
   with_items: "{{ domain.records }}"
+  tags: [ dns, cf ]

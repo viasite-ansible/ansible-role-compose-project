@@ -9,6 +9,7 @@
     p_tmp_ssl: "{{ domain_raw.ssl | default(p_ssl) }}"
     p_tmp_domain_remove: "{{ 'state' in domain_raw and domain_raw.state == 'absent' }}"
     nginx_sites_empty: {} # need for role nginx-vhosts
+  tags: [ config, nginx ]
 
 - name: "{{ domain_raw.domain}} : Define domain var"
   set_fact:
@@ -38,6 +39,8 @@
       nginx_custom_server: "{{ domain_raw.nginx_custom_server | default(p_nginx_custom_server) }}"
       nginx_custom_root_location: "{{ domain_raw.nginx_custom_root_location | default(p_nginx_custom_root_location) }}"
       nginx_custom_http: "{{ domain_raw.nginx_custom_http | default(p_nginx_custom_http) }}"
+  tags: [ config, nginx ]
+
 
 - name: "{{ domain.domain}} : Mkdir {{ domain.root_public}}"
   file:
@@ -47,10 +50,7 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
   when: not p_tmp_domain_remove
-
-- debug:
-    var: domain
-  when: not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define p_nginx_proxy_to_backend"
   set_fact:
@@ -73,6 +73,7 @@
       {{ p_nginx_proxy_params }}
       {% endif %}
   when: not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define p_nginx_flags"
   set_fact:
@@ -84,6 +85,7 @@
       }
       {% endif %}
   when: not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define p_nginx_location_php"
   set_fact:
@@ -92,6 +94,7 @@
       location ~* ^.+\.php$ {
         {{ p_nginx_proxy_to_backend | indent(2) }}
       }
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define p_nginx_location_rewrite"
   set_fact:
@@ -107,21 +110,25 @@
       }
       # end of @rewrite
   when: not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define _p_nginx_engine_server"
   set_fact:
     _p_nginx_engine_server: "{{ lookup('template', 'nginx/engine/' + domain.nginx_engine + '.j2') }}"
   when: not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define p_nginx_config"
   set_fact:
     p_nginx_config: "{% if domain.ssl %}https{% else %}http{% endif %}"
   when: not p_nginx_config and not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Define p_nginx_template"
   set_fact:
     p_nginx_template: "nginx/config/{{ p_nginx_config }}.j2"
   when: not p_nginx_template and not p_tmp_domain_remove
+  tags: [ config, nginx ]
 
 - name: "{{ domain.domain}} : Setup nginx vhost"
   include_role:
@@ -131,3 +138,4 @@
       p_domain_main: { 'template': p_nginx_template }
     }) }}"
     nginx_remove_sites: "{{ p_domains_remove }}"
+  tags: [ config, nginx ]
