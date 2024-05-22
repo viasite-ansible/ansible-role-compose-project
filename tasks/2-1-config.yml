@@ -121,3 +121,13 @@
     mode: "0755"
   when: p_compose is defined and p_compose
   tags: [config, config-deploy]
+
+- name: "Write README.md to {{ p_root }}"
+  template:
+    src: README.md.j2
+    dest: "{{ p_root }}/README.md"
+    owner: "{{ p_user }}"
+    group: "{{ p_user_group }}"
+    mode: "0755"
+  when: (p_readme is defined and p_readme) or (readme is defined and readme)
+  tags: [config, readme]

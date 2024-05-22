@@ -2,7 +2,7 @@
 
 server {
   # Redirect https to main domain
-  listen 443 ssl{% if not p_nginx_126_plus and domain.nginx_http2%} http2{% endif %};
+  listen 443 ssl{% if not p_nginx_126_plus and domain.nginx_http2 %} http2{% endif %};
   {% if p_nginx_126_plus and domain.nginx_http2 %}http2 on;
 {% endif %}
 
