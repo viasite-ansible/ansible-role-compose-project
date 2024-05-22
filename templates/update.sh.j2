@@ -1,3 +1,4 @@
+{% if p_update_sh %}{{ p_update_sh }}{% else %}
 #!/bin/sh
 
 set -e
@@ -21,6 +22,8 @@ ${compose_bin} --ansi never up -d 2>&1 >> "{{ p_log_update }}.last"
 
 {% if p_compose_build %}${compose_bin} build{% endif %}
 
+{% if p_git_update_pull and p_git_clone_public %}git --git-dir={{ p_root_public }}pull{% endif %}
+
 #echo "Sleeping 10 seconds." 2>&1 | >> "{{ p_log_update }}.last"
 #sleep 10
 #${compose_bin restart 2>&1 | >> "{{ p_log_update }}.last"
@@ -29,4 +32,5 @@ echo "Finishing docker-compose update `date`" 2>&1 | >> "{{ p_log_update }}.last
 cat "{{ p_log_update }}.last" >> "{{ p_log_update }}"
 {% if p_compose_version %}
 echo "Version: "$(${compose_bin} exec {{ p_compose_version }})""
+{% endif %}
 {% endif %}

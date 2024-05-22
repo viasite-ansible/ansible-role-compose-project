@@ -19,6 +19,9 @@
       domains_secondary: "{{ domain_raw.domains_secondary | default(p_domains_secondary) }}"
       domains_redirected: "{{ domains_redirected | default([]) + [ p_domain_redirected ] }}"
 
+      git_clone: "{{ domain_raw.git_clone | default(p_git_clone_public) }}"
+      git_version: "{{ domain.git_version | default(omit) }}"
+
       ssl: "{{ p_tmp_ssl }}"
       acmesh_domains: "{{ domain_raw.acmesh_domains | default(omit) }}"
       ssl_certificate: "{{ p_letsencrypt_acmesh_deploy_path + '/' + domain_raw.acmesh_domains[0] + '.fullchain' if p_tmp_ssl else omit }}"
@@ -41,7 +44,6 @@
       nginx_custom_http: "{{ domain_raw.nginx_custom_http | default(p_nginx_custom_http) }}"
   tags: [ config, nginx ]
 
-
 - name: "{{ domain.domain}} : Mkdir {{ domain.root_public}}"
   file:
     path: "{{ domain.root_public }}"
@@ -51,6 +53,27 @@
     group: "{{ p_user_group }}"
   when: not p_tmp_domain_remove
   tags: [ config, nginx ]
+
+- name: "Check if {{ domain.root_public }} empty"
+  command: "find {{ domain.root_public }} -type f -print -quit"
+  changed_when: False
+  register: p_register_root_public_files
+  tags: [ config, nginx, git ]
+
+- name: "Define p_root_public_empty"
+  set_fact:
+    p_root_public_empty: "{{ p_register_root_public_files.stdout == '' }}"
+  tags: [ config, nginx, git ]
+
+- name: "Clone git to {{ domain.root_public }}"
+  git:
+    repo: "{{ domain.git_clone }}"
+    dest: "{{ domain.root_public }}"
+    version: "{{ domain.git_version | default(omit) }}"
+  become: yes
+  become_user: "{{ p_user }}"
+  when: "p_root_public_empty and domain.git_clone"
+  tags: [config, nginx, git]
 
 - name: "{{ domain.domain}} : Define p_nginx_proxy_to_backend"
   set_fact:

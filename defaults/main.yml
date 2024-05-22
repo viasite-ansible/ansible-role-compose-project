@@ -17,6 +17,7 @@ p_domains_secondary: []
 # www p_domain will be added automatically
 p_domains_redirected: []
 p_domains_remove: []
+p_update_sh: # custom update.sh code
 
 p_domains: []
 p_dirs: []
@@ -51,8 +52,11 @@ p_projects_root: "/home/{{ p_user }}/projects"
 p_root: "{{ p_projects_root }}/{{ p_name }}"
 p_data: "{{ p_root }}/data"
 
-p_git_clone:
+p_git_clone: # clone to project root
+p_git_clone_public: # clone to public dir
 p_git_version:
+p_git_public_version:
+p_git_update_pull: no # git pull on update.sh
 
 p_log_root: "{{ p_root }}/log"
 p_log_update: "{{ p_log_root }}/docker-compose-update.log"

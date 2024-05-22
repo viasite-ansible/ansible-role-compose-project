@@ -6,6 +6,7 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
   become: yes
+  when: p_compose is defined and p_compose
   tags: [docker, deploy, config, config-docker]
 
 - name: Write update.sh
@@ -15,20 +16,22 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
     mode: "0755"
+  when: p_compose is defined or p_update_sh is defined
   tags: [docker, deploy, config, config-docker]
 
+- debug: var=p_update_sh
 - name: Run update.sh
   shell: "{{ p_root }}/update.sh" # | grep -vE '(up-to-date|Pulling)'
 #  changed_when: False # TODO:
-  register: p_update_sh
-  changed_when: "'Creating' in p_update_sh.stdout or 'Recreating' in p_update_sh.stdout or 'Starting' in p_update_sh.stdout"
-  failed_when: "'ERROR' in p_update_sh.stdout or 'Error' in p_update_sh.stdout"
+  register: p_register_update_sh
+  changed_when: "'Creating' in p_register_update_sh.stdout or 'Recreating' in p_register_update_sh.stdout or 'Starting' in p_register_update_sh.stdout"
+  failed_when: "'ERROR' in p_register_update_sh.stdout or 'Error' in p_register_update_sh.stdout"
   tags: [docker, deploy, pull]
 
 - name: update.sh output
-  debug: msg="************************************\n{{ p_update_sh.stdout }}"
+  debug: msg="************************************\n{{ p_register_update_sh.stdout }}"
   tags: [docker, deploy, pull, print_action]
-  when: p_update_sh is defined and 'stdout' in p_update_sh
+  when: p_register_update_sh is defined and 'stdout' in p_register_update_sh
 
 # - name: docker-compose up
 #   docker_compose:

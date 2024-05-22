@@ -46,7 +46,7 @@
   with_items: "{{ p_domains }}"
   loop_control:
     loop_var: domain_raw
-  tags: [ config, nginx ] # never тег не катит, т.к. ломает --list-tags
+  tags: [ config, nginx, git ] # never тег не катит, т.к. ломает --list-tags
 
 - name: "{{ domain.domain}} : Ensure Diffie-Helmann parameters dhparam.pem exists when ssl site provisioned"
   command: openssl dhparam -out /etc/ssl/certs/dhparam.pem 2048
@@ -79,7 +79,7 @@
   tags: [ docker ]
 
 - include_tasks: 4-1-compose-deploy.yml
-  when: p_compose is defined and p_compose
+#  when: p_compose is defined and p_compose
   tags: [ deploy, docker ]
 
 - include_tasks: init-db.yml
@@ -98,13 +98,13 @@
       {% endfor %}
 
       {% if p_compose_version %} 
-      {{ p_update_sh.stdout_lines | select('match', 'Version:.*') | list | join('\n') | indent(4) }}
+      {{ p_register_update_sh.stdout_lines | select('match', 'Version:.*') | list | join('\n') | indent(4) }}
       {% endif %}
       
-      {% if p_update_sh is defined and p_update_sh is changed %}update.sh changes:
+      {% if p_register_update_sh is defined and p_register_update_sh is changed %}update.sh changes:
       {{ p_update_sh.stdout_lines | select('match', '.*(Created|Recreated)') | list | join('\n') | indent(4) }}
 
       {% endif %}
       ************************************
-  changed_when: p_update_sh is defined and p_update_sh is changed
+  changed_when: p_register_update_sh is defined and p_register_update_sh is changed
   tags: [ always, info, skip_ansible_lint, print_action ]
