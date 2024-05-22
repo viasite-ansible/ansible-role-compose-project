@@ -1,5 +1,6 @@
 ---
 p_name: "{{ p_domains[0].domain }}" # project machine name
+p_readme:
 
 # gitlab deploy key
 p_gitlab_registry: registry.gitlab.com
