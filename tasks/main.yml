@@ -17,6 +17,13 @@
 
 
 - include_tasks: 1-1-user.yml
+  tags:
+    - git
+    - permissions
+    - ssh-keys
+    - user
+    - user_create
+    - zsh
 
 - import_tasks: 1-2-dns.yml
   tags: [ dns ] # never тег не катит, т.к. ломает --list-tags
@@ -39,7 +46,15 @@
 
 
 - include_tasks: 2-1-config.yml
-  tags: [ config, config-docker-compose, readme ]
+  tags:
+    - config
+    - config-deploy
+    - config-docker-compose
+    - configs
+    - config-api
+    - config-yml
+    - git
+    - readme
 
 - include_tasks: 2-2-nginx.yml
   when: domain_raw.acmesh_domains is defined or domain_raw.ssl is defined

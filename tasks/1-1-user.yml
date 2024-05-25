@@ -6,7 +6,7 @@
     home: "{{ p_homedir }}"
     shell: /bin/zsh
   become: yes
-  tags: user_create
+  tags: [ user, user_create ]
 
 - name: "Project: User directory access"
   file:
@@ -15,14 +15,14 @@
     mode: 0750
     owner: "{{ p_user }}"
     group: "{{ p_homedir_group }}"
-  tags: [ user_create, permissions ]
+  tags: [ user, user_create, permissions ]
 
 - name: "Project: check ~/.zshrc exists"
   stat:
     path: "{{ p_homedir }}/.zshrc"
   changed_when: False
   register: p_register_zshrc
-  tags: [ user_create, zsh ]
+  tags: [ user, user_create, zsh ]
 
 - name: "Project: setup simple ~/.zshrc if empty"
   template:
@@ -31,14 +31,14 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
   when: not p_setup_zsh and (not p_register_zshrc.stat.exists or p_force_zshrc)
-  tags: [ user_create, zsh ]
+  tags: [ user, user_create, zsh ]
 
 - name: "Project: setup git"
   include_role:
     name: git
   vars:
     git_user: "{{ p_user }}"
-  tags: git
+  tags: [ user, git ]
   when: p_setup_git
 
 - name: "Project: setup ssh-keys"
@@ -46,7 +46,7 @@
     name: ssh-keys
   vars:
     ssh_keys_user: "{{ p_user }}"
-  tags: ssh-keys
+  tags: [ user, ssh-keys ]
   when: p_setup_ssh_keys
 
 - name: "Project: setup zsh"
@@ -54,5 +54,5 @@
     name: zsh
   vars:
     zsh_user: "{{ p_user }}"
-  tags: zsh
+  tags: [ user, zsh ]
   when: p_setup_zsh
