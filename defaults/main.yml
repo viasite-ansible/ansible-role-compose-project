@@ -95,7 +95,7 @@ p_ssl_redirect_code: 301
 
 
 
-p_dns_ip: "{{ ansible_default_ipv4.address }}"
+p_dns_ip: "{{ ansible_default_ipv4.address | default(omit) }}"
 
 p_setup_git: True # настроит git
 p_setup_ssh_keys: True # пропишет ssh ключи
