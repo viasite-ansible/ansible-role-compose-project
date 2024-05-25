@@ -52,11 +52,11 @@
 
 - name: Mkdir p_dirs
   file:
-    path: "{{ item }}"
+    path: "{{ item.path if 'path' in item else item }}"
     state: directory
     recurse: yes
-    owner: "{{ p_user }}"
-    group: "{{ p_user_group }}"
+    owner: "{{ item.owner if 'owner' in item else p_user }}"
+    group: "{{ item.group if 'group' in item else p_user_group }}"
   become: yes
   with_items:
     - "{{ p_dirs }}"
