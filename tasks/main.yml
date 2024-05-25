@@ -95,13 +95,16 @@
 
 - include_tasks: 4-1-compose-deploy.yml
 #  when: p_compose is defined and p_compose
-  tags: [ deploy, docker ]
+  tags: [ config, config-docker, deploy, docker ]
+
+- include_tasks: 4-2-healthcheck.yml
+  tags: [ healthcheck ]
 
 - include_tasks: init-db.yml
   when: p_register_running_all is not defined
   tags: [ init-db ]
 
-
+# TODO: don't run while --healthcheck
 - name: "Instance information"
   debug:
     msg: |
@@ -112,13 +115,15 @@
       {% for domain in p_domains if 'acmesh_domains' in domain or 'ssl' in domain %}http{% if not 'ssl' in domain or domain.ssl %}s{% endif %}://{{ domain.domain }}
       {% endfor %}
 
+      {% if p_register_update_sh is defined %}
       {% if p_compose_version %} 
       {{ p_register_update_sh.stdout_lines | select('match', 'Version:.*') | list | join('\n') | indent(4) }}
       {% endif %}
       
-      {% if p_register_update_sh is defined and p_register_update_sh is changed %}update.sh changes:
-      {{ p_update_sh.stdout_lines | select('match', '.*(Created|Recreated)') | list | join('\n') | indent(4) }}
+      {% if p_register_update_sh is changed %}update.sh changes:
+      {{ p_register_update_sh.stdout_lines | select('match', '.*(Created|Recreated|Started)') | list | join('\n') | indent(4) }}
 
+      {% endif %}
       {% endif %}
       ************************************
   changed_when: p_register_update_sh is defined and p_register_update_sh is changed

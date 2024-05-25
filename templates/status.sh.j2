@@ -1,0 +1,4 @@
+#!/bin/bash
+cd "{{ p_root }}"
+{% if p_compose %}docker-compose ps -a --format json
+{% else %}echo '[{"State":"static"}]'{% endif %}

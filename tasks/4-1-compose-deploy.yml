@@ -16,16 +16,15 @@
     owner: "{{ p_user }}"
     group: "{{ p_user_group }}"
     mode: "0755"
-  when: p_compose is defined or p_update_sh is defined
+  when: (p_compose is defined and p_compose) or (p_update_sh is defined and p_update_sh)
   tags: [docker, deploy, config, config-docker]
 
-- debug: var=p_update_sh
 - name: Run update.sh
   shell: "{{ p_root }}/update.sh" # | grep -vE '(up-to-date|Pulling)'
-#  changed_when: False # TODO:
   register: p_register_update_sh
   changed_when: "'Creating' in p_register_update_sh.stdout or 'Recreating' in p_register_update_sh.stdout or 'Starting' in p_register_update_sh.stdout"
   failed_when: "'ERROR' in p_register_update_sh.stdout or 'Error' in p_register_update_sh.stdout"
+  when: (p_compose is defined and p_compose) or (p_update_sh is defined and p_update_sh)
   tags: [docker, deploy, pull]
 
 - name: update.sh output

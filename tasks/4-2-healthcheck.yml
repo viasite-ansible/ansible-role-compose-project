@@ -1,0 +1,19 @@
+---
+- name: "Check service status at {{ p_root }}/status.sh"
+  shell: "{{ p_root }}/status.sh" # | grep -vE '(up-to-date|Pulling)'
+  register: p_reg_status
+  changed_when: "'Creating' in p_reg_status.stdout or 'Recreating' in p_reg_status.stdout or 'Starting' in p_reg_status.stdout"
+  failed_when: "p_reg_status.rc != 0 or 'stop' in p_reg_status.stdout or 'Error' in p_reg_status.stdout"
+  tags: [healthcheck]
+
+# - debug: var=p_reg_status
+#   tags: [healthcheck]
+
+- name: status.sh output
+  debug: msg="<status>{{ p_reg_status.stdout }}</status>"
+  tags: [healthcheck]
+  when: p_reg_status is defined and 'stdout' in p_reg_status
+- name: status.sh output
+  debug: var=p_reg_status.stdout
+  tags: [healthcheck]
+  when: p_reg_status is defined and 'stdout' in p_reg_status
