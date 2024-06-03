@@ -55,8 +55,8 @@
     path: "{{ item.path if 'path' in item else item }}"
     state: directory
     recurse: yes
-    owner: "{{ item.owner if 'owner' in item else p_user }}"
-    group: "{{ item.group if 'group' in item else p_user_group }}"
+    owner: "{{ item.owner | default(p_user) }}"
+    group: "{{ item.group | default(p_user_group) }}"
   become: yes
   with_items:
     - "{{ p_dirs }}"
