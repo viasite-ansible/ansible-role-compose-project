@@ -91,7 +91,7 @@
       include {% if domain.nginx_engine == 'drupal' %}snippets/fastcgi_drupal.conf{% else %}fastcgi.conf{% endif %};
       fastcgi_pass unix:{{ p_php_socket }};{% endif %}
 
-      {% if domain.nginx_backend == 'service' %}
+      {% if domain.nginx_backend == 'service' and domain.nginx_service_port %}
       proxy_pass http://{{ domain.nginx_service_host }}{% if 'nginx_service_port' in domain %}:{{ domain.nginx_service_port }}{% endif %};
       {{ p_nginx_proxy_params }}
       {% endif %}
