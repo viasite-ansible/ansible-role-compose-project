@@ -33,7 +33,20 @@
     repo: "{{ p_git_clone }}"
     dest: "{{ p_root }}"
     version: "{{ p_git_version | default(omit) }}"
+  become: yes
+  become_user: "{{ p_user }}"
   when: "(not p_root_exists or p_root_empty) and p_git_clone is defined and p_git_clone"
+  tags: [config, git]
+
+- name: Clone git repos from p_git_clone list
+  git:
+    repo: "{{ item.repo }}"
+    dest: "{{ item.dest }}"
+    version: "{{ item.version | default(omit) }}"
+  with_items: "{{ p_git_clone }}"
+  become: yes
+  become_user: "{{ p_user }}"
+  when: "p_git_clone"
   tags: [config, git]
 
 - name: Mkdir config dirs
